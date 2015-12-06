@@ -485,39 +485,36 @@ var Adapter = function(settings) {
 	return this;
 };
 
-var mysqlPool; // this should be initialized only once.
-var mysqlCharset;
 
 var Pool = function (settings) {
-	if (!mysqlPool) {
-		var mysql = require('mysql');
 
-		var poolOption = {
-			createConnection: settings.createConnection,
-			waitForConnections: settings.waitForConnections,
-			connectionLimit: settings.connectionLimit,
-			queueLimit: settings.queueLimit
-		};
-		Object.keys(poolOption).forEach(function (element) {
-			// Avoid pool option being used by mysql connection.
-			delete settings[element];
-			// Also remove undefined elements from poolOption
-			if (!poolOption[element]) {
-				delete poolOption[element];
-			}
-		});
+	var mysql = require('mysql');
 
-		// Confirm settings with Adapter.
-		var db = new Adapter(settings);
-		var connectionSettings = db.connectionSettings();
+	var poolOption = {
+		createConnection: settings.createConnection,
+		waitForConnections: settings.waitForConnections,
+		connectionLimit: settings.connectionLimit,
+		queueLimit: settings.queueLimit
+	};
+	Object.keys(poolOption).forEach(function (element) {
+		// Avoid pool option being used by mysql connection.
+		delete settings[element];
+		// Also remove undefined elements from poolOption
+		if (!poolOption[element]) {
+			delete poolOption[element];
+		}
+	});
 
-		Object.keys(connectionSettings).forEach(function (element) {
-			poolOption[element] = connectionSettings[element];
-		});
+	// Confirm settings with Adapter.
+	var db = new Adapter(settings);
+	var connectionSettings = db.connectionSettings();
 
-		mysqlPool = mysql.createPool(poolOption);
-		mysqlCharset = settings.charset;
-	}
+	Object.keys(connectionSettings).forEach(function (element) {
+		poolOption[element] = connectionSettings[element];
+	});
+
+	var mysqlPool = mysql.createPool(poolOption);
+	var mysqlCharset = settings.charset;
 
 	this.pool = function () {
 		return mysqlPool;
