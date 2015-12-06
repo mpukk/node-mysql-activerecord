@@ -53,7 +53,7 @@ var Adapter = function(settings) {
 			settings.password = '';
 		}
 		if (!settings.database) {
-			throw new Error('Unable to start mysql-activerecord - no database given.');
+			settings.database = '';
 		}
 
 		return settings;
