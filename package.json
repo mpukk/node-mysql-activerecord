@@ -20,6 +20,12 @@
 	"dependencies": {
 		"mysql": "2.5.2"
 	},
+	"devDependencies": {
+		"mocha": "*",
+		"should": "*",
+		"sinon": "*",
+		"rewire": "*"
+	},
 	"main" : "./",
 	"engines": {
 		"node": "*"

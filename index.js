@@ -59,9 +59,9 @@ var Adapter = function(settings) {
 		return settings;
 	};
 
-	var connection;
-	var connectionSettings;
-	var pool;
+	var connection,
+		connectionSettings,
+		pool;
 
 	if (settings && settings.pool) {
 		pool = settings.pool.pool;
@@ -84,7 +84,7 @@ var Adapter = function(settings) {
 		offsetClause = -1,
 		joinClause = [],
 		lastQuery = '';
-	
+
 	var resetQuery = function(newLastQuery) {
 		whereClause = {};
 		selectClause = [];
@@ -98,14 +98,24 @@ var Adapter = function(settings) {
 		rawWhereClause = {};
 		rawWhereString = {};
 	};
-	
+
+	var runQuery = function(queryString, runCallback) {
+		connection.query(queryString, function(err, res) {
+			if (err) {
+				err.querystring = queryString;
+			}
+			runCallback(err, res);
+			resetQuery(queryString);
+		});
+	}
+
 	var rawWhereClause = {};
 	var rawWhereString = {};
-	
+
 	var escapeFieldName = function(str) {
 		return (typeof rawWhereString[str] === 'undefined' && typeof rawWhereClause[str] === 'undefined' ? '`' + str.replace('.','`.`') + '`' : str);
 	};
-	
+
 	var buildDataString = function(dataSet, separator, clause) {
 		if (!clause) {
 			clause = 'WHERE';
@@ -222,13 +232,12 @@ var Adapter = function(settings) {
 			+ buildJoinString()
 			+ buildDataString(whereClause, ' AND ', 'WHERE');
 
-			connection.query(combinedQueryString, function(err, res) { 
+			runQuery(combinedQueryString, function(err, res) {
 				if (err)
 					responseCallback(err, null);
 				else
 					responseCallback(null, res[0]['count']);
 			});
-			resetQuery(combinedQueryString);
 		}
 
 		return that;
@@ -285,7 +294,7 @@ var Adapter = function(settings) {
 		orderByClause = this.comma_separated_arguments(set);
 		return that;
 	};
-	
+
 	this.limit = function(newLimit, newOffset) {
 		if (typeof newLimit === 'number') {
 			limitClause = newLimit;
@@ -300,7 +309,7 @@ var Adapter = function(settings) {
 		connection.ping();
 		return that;
 	};
-	
+
 	this.insert = function(tableName, dataSet, responseCallback, verb, querySuffix) {
 		if (typeof verb === 'undefined') {
 			var verb = 'INSERT';
@@ -321,8 +330,7 @@ var Adapter = function(settings) {
 					combinedQueryString = combinedQueryString + ' ' + querySuffix;
 				}
 
-				connection.query(combinedQueryString, responseCallback);
-				resetQuery(combinedQueryString);
+				runQuery(combinedQueryString, responseCallback);
 			}
 		}
 		else {
@@ -390,13 +398,12 @@ var Adapter = function(settings) {
 			+ (limitClause !== -1 ? ' LIMIT ' + limitClause : '')
 			+ (offsetClause !== -1 ? ' OFFSET ' + offsetClause : '');
 
-			connection.query(combinedQueryString, responseCallback);
-			resetQuery(combinedQueryString);
+			runQuery(combinedQueryString, responseCallback);
 		}
 		
 		return that;
 	};
-	
+
 	this.update = function(tableName, newData, responseCallback) {
 		if (typeof tableName === 'string') {
 			var combinedQueryString = 'UPDATE ' + escapeFieldName(tableName)
@@ -404,8 +411,7 @@ var Adapter = function(settings) {
 			+ buildDataString(whereClause, ' AND ', 'WHERE')
 			+ (limitClause !== -1 ? ' LIMIT ' + limitClause : '');
 
-			connection.query(combinedQueryString, responseCallback);
-			resetQuery(combinedQueryString);
+			runQuery(combinedQueryString, responseCallback);
 		}
 		
 		return that;
@@ -421,8 +427,7 @@ var Adapter = function(settings) {
 			+ buildDataString(whereClause, ' AND ', 'WHERE')
 			+ (limitClause !== -1 ? ' LIMIT ' + limitClause : '');
 
-			connection.query(combinedQueryString, responseCallback);
-			resetQuery(combinedQueryString);
+			runQuery(combinedQueryString, responseCallback);
 		}
 
 		return that;
@@ -433,8 +438,7 @@ var Adapter = function(settings) {
 	};
 
 	this.query = function(sqlQueryString, responseCallback) {
-		connection.query(sqlQueryString, responseCallback);
-		resetQuery(sqlQueryString);
+		runQuery(sqlQueryString, responseCallback);
 		return that;
 	};
 
@@ -445,7 +449,7 @@ var Adapter = function(settings) {
 	this.forceDisconnect = function() {
 		return connection.destroy();
 	};
-	
+
 	this.releaseConnection = function() {
 		pool.releaseConnection(connection);
 	};
@@ -481,7 +485,7 @@ var Adapter = function(settings) {
 	}
 
 	var that = this;
-	
+
 	return this;
 };
 
