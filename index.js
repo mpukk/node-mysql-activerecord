@@ -104,8 +104,8 @@ var Adapter = function(settings) {
 			if (err) {
 				err.querystring = queryString;
 			}
-			runCallback(err, res);
 			resetQuery(queryString);
+			runCallback(err, res);
 		});
 	}
 
