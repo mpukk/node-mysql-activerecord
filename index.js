@@ -423,7 +423,8 @@ var Adapter = function(settings) {
 
 	this.delete = function(tableName, responseCallback) {
 		if (typeof tableName === 'string') {
-			var combinedQueryString = 'DELETE FROM ' + escapeFieldName(tableName)
+			var combinedQueryString = 'DELETE ' + escapeFieldName(tableName) + ' FROM ' + escapeFieldName(tableName)
+			+ buildJoinString()
 			+ buildDataString(whereClause, ' AND ', 'WHERE')
 			+ (limitClause !== -1 ? ' LIMIT ' + limitClause : '');
 
